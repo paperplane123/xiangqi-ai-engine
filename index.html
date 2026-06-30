@@ -1534,14 +1534,10 @@ function newGame() {
 
 function undoButtonClick() {
   if (aiThinking) return;
+  if (moveHistory.length === 0) return;
 
-  // 悔两步 (AI的走棋 + 人的走棋)
-  if (moveHistory.length >= 2 && humanSide !== sideToMove) {
-    undoMove(); // AI的
-    undoMove(); // 人的
-  } else if (moveHistory.length >= 1) {
-    undoMove();
-  }
+  // 每点一次只悔一步, 简单直观
+  undoMove();
 
   selectedPiece = null;
   legalMovesForSelected = [];
@@ -1550,6 +1546,11 @@ function undoButtonClick() {
   updateMoveLog();
   updateStatus();
   render();
+
+  // 悔完轮到AI走的话, 自动触发
+  if (!gameOver && sideToMove !== humanSide) {
+    aiMove();
+  }
 }
 
 function switchSide() {
