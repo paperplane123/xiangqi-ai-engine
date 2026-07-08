@@ -1536,8 +1536,16 @@ function undoButtonClick() {
   if (aiThinking) return;
   if (moveHistory.length === 0) return;
 
-  // 每点一次只悔一步, 简单直观
+  // 人机对战: 一次悔棋应回退到"轮到玩家走棋"的状态。
+  // 先撤掉最近一步, 然后若此时轮到 AI(说明撤掉的是玩家步,
+  // AI 的上一步还在), 再撤一步, 直到轮到玩家或历史为空。
   undoMove();
+  // 若玩家先手且此时停在 AI 的回合, 再撤一步回到玩家回合
+  while (moveHistory.length > 0 && sideToMove !== humanSide) {
+    undoMove();
+  }
+  // 极端情况: 历史已空但仍轮到 AI(如玩家执黑且已悔光开局AI的步)
+  // 此时不能再撤, 直接保持当前局面。
 
   selectedPiece = null;
   legalMovesForSelected = [];
@@ -1547,7 +1555,8 @@ function undoButtonClick() {
   updateStatus();
   render();
 
-  // 悔完轮到AI走的话, 自动触发
+  // 悔完若轮到AI走(例如玩家执黑时只悔掉了AI的开局步),
+  // 自动触发AI继续, 让玩家重新获得走棋权。
   if (!gameOver && sideToMove !== humanSide) {
     aiMove();
   }
